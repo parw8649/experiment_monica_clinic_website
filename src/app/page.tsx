@@ -1,18 +1,17 @@
-import fs from "node:fs";
-import path from "node:path";
+import { readSection } from "@/lib/readSection";
 
+// Home (/) — the target site homepage body injected verbatim.
+//
 // For guaranteed byte-exact fidelity we inject the entire <body> content of
-// the target page verbatim — every class, every data-astro-cid marker,
+// the target page verbatim: every class, every data-astro-cid marker,
 // every svg path, every data-chapter attribute, the #scroll-top button, the
 // #canvas-wrapper, the chapters-navigation, every section and the footer.
 //
-// The production scripts (GlobalApp, ChaptersNavigation, Solutions, Social,
-// WebGL, Layout) are loaded in layout.tsx and wire themselves to this DOM.
-const BODY_INNER_HTML = fs.readFileSync(
-  path.join(process.cwd(), "src", "sections-raw", "body-inner.html"),
-  "utf8",
-);
+// the target site's production scripts (GlobalApp, ChaptersNavigation, Solutions,
+// Social, WebGL, Layout) are loaded in src/app/layout.tsx and wire
+// themselves to this DOM.
+const BODY_INNER = readSection("body-inner");
 
 export default function Home() {
-  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER_HTML }} />;
+  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER }} />;
 }
