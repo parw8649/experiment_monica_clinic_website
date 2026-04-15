@@ -37,17 +37,42 @@ jobs:
       - name: Compute base path
         id: base_path
         run: |
-          # For a project site the URL is https://<owner>.github.io/<repo>/,
-          # so the base path is "/<repo>". For a user/org site
-          # (<name>.github.io) the site is served from the root, so base path
-          # stays empty.
+          # The build needs to know what URL prefix the site will be served
+          # from so it can rewrite absolute asset paths inside the bundled
+          # CSS and JS. Decision tree (highest priority first):
+          #
+          #   1. If a CNAME file exists at public/CNAME (you've pointed a
+          #      custom domain at GitHub Pages), the site serves from the
+          #      domain root, so base path is empty.
+          #
+          #   2. If the repository name is exactly "<owner>.github.io"
+          #      (a user or organisation site), the site serves from the
+          #      domain root, so base path is empty.
+          #
+          #   3. Otherwise it's a project site at
+          #      https://<owner>.github.io/<repo>/ and the base path is
+          #      "/<repo>".
+          #
+          # To override this in CI (e.g. preview branches or staging), set
+          # the env var BASE_PATH_OVERRIDE in the workflow run or as a
+          # repository variable and we'll honour it verbatim.
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
           OWNER="${GITHUB_REPOSITORY%%/*}"
-          if [ "$REPO_NAME" = "${OWNER}.github.io" ]; then
-            echo "base_path=" >> "$GITHUB_OUTPUT"
+          OVERRIDE='${{ vars.BASE_PATH_OVERRIDE }}'
+          if [ -n "$OVERRIDE" ]; then
+            BASE_PATH="$OVERRIDE"
+            echo "Using BASE_PATH_OVERRIDE repo variable: '$BASE_PATH'"
+          elif [ -f "public/CNAME" ]; then
+            BASE_PATH=""
+            echo "Detected public/CNAME — serving from custom domain root."
+          elif [ "$REPO_NAME" = "${OWNER}.github.io" ]; then
+            BASE_PATH=""
+            echo "User/org site (${OWNER}.github.io) — serving from root."
           else
-            echo "base_path=/$REPO_NAME" >> "$GITHUB_OUTPUT"
+            BASE_PATH="/$REPO_NAME"
+            echo "Project site — serving from /${REPO_NAME}/."
           fi
+          echo "base_path=$BASE_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Build (Next.js static export)
         run: npm run build

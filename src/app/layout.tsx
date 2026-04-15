@@ -64,44 +64,50 @@ export default function RootLayout({
         {children}
 
         {/*
-          Mont-fort's production JS bundles — loaded as ES modules, same order
-          as on mont-fort.com. GlobalApp initialises Three.js + GSAP + Lenis,
-          Layout.js flips `.loaded` on body, and the section-specific entries
-          (WebGL, Solutions, Social, ChaptersNavigation) wire themselves into
-          the DOM elements rendered by our page component above.
+          The production JS bundles — loaded as ES modules, same order as
+          in the source HTML. The renderer initialises Three.js + GSAP +
+          Lenis, the Layout entry flips `.loaded` on body, and the
+          section-specific entries (WebGL, Solutions, Social,
+          ChaptersNavigation) wire themselves into the DOM elements
+          rendered by our page component above.
 
-          We place them AFTER children so the full DOM (including #scroll-top,
-          #canvas-wrapper, all section elements) exists before scripts run.
+          IMPORTANT: do NOT add `async` to these script tags. The bundles
+          have a strict ordering dependency — the WebGL entry expects
+          GlobalApp to have finished initialising before it attaches the
+          renderer to the canvas. `type="module"` is already deferred by
+          default and executes scripts in document order, which is exactly
+          what we need. Adding `async` makes each script execute as soon
+          as its own download finishes (in arbitrary order), which races
+          the dependency graph and leaves the renderer half-initialised:
+          the canvas is created with a WebGL context but draws nothing.
+
+          They also need to render AFTER {children} so the full DOM
+          (including #scroll-top, #canvas-wrapper, all section elements)
+          exists before any script runs querySelector against it.
         */}
         <script
           type="module"
           src={P("/_astro/ClientRouter.astro_astro_type_script_index_0_lang.WONxKOw9.js")}
-          async
         />
         <script
           type="module"
           src={P("/_astro/WebGL.astro_astro_type_script_index_0_lang.ClLv70z8.js")}
-          async
         />
         <script
           type="module"
           src={P("/_astro/Solutions.astro_astro_type_script_index_0_lang.DH4T_DBQ.js")}
-          async
         />
         <script
           type="module"
           src={P("/_astro/Social.astro_astro_type_script_index_0_lang.DMS86Kjn.js")}
-          async
         />
         <script
           type="module"
           src={P("/_astro/ChaptersNavigation.astro_astro_type_script_index_0_lang.DYrj7sV6.js")}
-          async
         />
         <script
           type="module"
           src={P("/_astro/Layout.astro_astro_type_script_index_0_lang.DbdhcTQd.js")}
-          async
         />
       </body>
     </html>
