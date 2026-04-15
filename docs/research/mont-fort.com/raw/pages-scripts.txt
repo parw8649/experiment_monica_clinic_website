@@ -1,0 +1,5 @@
+/_astro/ChaptersNavigation.astro_astro_type_script_index_0_lang.DYrj7sV6.js
+/_astro/ClientRouter.astro_astro_type_script_index_0_lang.WONxKOw9.js
+/_astro/Layout.astro_astro_type_script_index_0_lang.DbdhcTQd.js
+/_astro/WebGL.astro_astro_type_script_index_0_lang.ClLv70z8.js
+/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
