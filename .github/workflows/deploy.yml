@@ -34,13 +34,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Compute base path
+        id: base_path
+        run: |
+          # For a project site the URL is https://<owner>.github.io/<repo>/,
+          # so the base path is "/<repo>". For a user/org site
+          # (<name>.github.io) the site is served from the root, so base path
+          # stays empty.
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          if [ "$REPO_NAME" = "${OWNER}.github.io" ]; then
+            echo "base_path=" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_path=/$REPO_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build (Next.js static export)
         run: npm run build
         env:
-          # If you're deploying to a *project site* (username.github.io/repo-name),
-          # set NEXT_PUBLIC_BASE_PATH to the repo name so asset URLs rewrite.
-          # For a user site (username.github.io) or a custom domain, leave empty.
-          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.base_path.outputs.base_path }}
 
       - name: Add .nojekyll
         # Stops GitHub Pages' Jekyll layer from ignoring files/folders starting

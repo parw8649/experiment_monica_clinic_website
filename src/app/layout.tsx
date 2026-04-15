@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { BASE_PATH } from "@/lib/readSection";
 import "./globals.css";
+
+// When we deploy to a GitHub Pages project site, every asset URL needs to
+// be prefixed with the repo name. BASE_PATH is "" locally and "/<repo>" in
+// CI (injected via NEXT_PUBLIC_BASE_PATH).
+const P = (p: string) => `${BASE_PATH}${p}`;
 
 export const viewport: Viewport = {
   themeColor: "#2d628c",
@@ -14,9 +20,9 @@ export const metadata: Metadata = {
   keywords: "keyword 2, keyword 2",
   robots: "index, follow",
   icons: {
-    icon: [{ url: "/_astro/favicon_R1w72.webp", type: "image/x-icon" }],
-    shortcut: "/_astro/favicon_R1w72.webp",
-    apple: [{ url: "/_astro/favicon_Z1kMBbQ.webp", sizes: "180x180" }],
+    icon: [{ url: P("/_astro/favicon_R1w72.webp"), type: "image/x-icon" }],
+    shortcut: P("/_astro/favicon_R1w72.webp"),
+    apple: [{ url: P("/_astro/favicon_Z1kMBbQ.webp"), sizes: "180x180" }],
   },
   openGraph: {
     title: "Montfort Group",
@@ -39,14 +45,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/*
-          the target site's production stylesheet — the single source of truth for
+          Mont-fort's production stylesheet — the single source of truth for
           all colors, typography, layout rules, and responsive breakpoints.
           Copied verbatim from /_astro/_slug_.B97dlsMJ.css so computed styles
           are byte-identical.
         */}
-        <link rel="stylesheet" href="/_astro/_slug_.B97dlsMJ.css" />
-        {/* Sitemap reference from the captured source/<head> */}
-        <link rel="sitemap" href="/sitemap-index.xml" />
+        <link rel="stylesheet" href={P("/_astro/_slug_.B97dlsMJ.css")} />
         {/* Astro view-transitions scaffolding — these inline rules neutralise
             the default view-transition CSS so Astro's ClientRouter can take over. */}
         <style
@@ -60,8 +64,8 @@ export default function RootLayout({
         {children}
 
         {/*
-          the target site's production JS bundles — loaded as ES modules, same order
-          as in the source. GlobalApp initialises Three.js + GSAP + Lenis,
+          Mont-fort's production JS bundles — loaded as ES modules, same order
+          as on mont-fort.com. GlobalApp initialises Three.js + GSAP + Lenis,
           Layout.js flips `.loaded` on body, and the section-specific entries
           (WebGL, Solutions, Social, ChaptersNavigation) wire themselves into
           the DOM elements rendered by our page component above.
@@ -71,32 +75,32 @@ export default function RootLayout({
         */}
         <script
           type="module"
-          src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.WONxKOw9.js"
+          src={P("/_astro/ClientRouter.astro_astro_type_script_index_0_lang.WONxKOw9.js")}
           async
         />
         <script
           type="module"
-          src="/_astro/WebGL.astro_astro_type_script_index_0_lang.ClLv70z8.js"
+          src={P("/_astro/WebGL.astro_astro_type_script_index_0_lang.ClLv70z8.js")}
           async
         />
         <script
           type="module"
-          src="/_astro/Solutions.astro_astro_type_script_index_0_lang.DH4T_DBQ.js"
+          src={P("/_astro/Solutions.astro_astro_type_script_index_0_lang.DH4T_DBQ.js")}
           async
         />
         <script
           type="module"
-          src="/_astro/Social.astro_astro_type_script_index_0_lang.DMS86Kjn.js"
+          src={P("/_astro/Social.astro_astro_type_script_index_0_lang.DMS86Kjn.js")}
           async
         />
         <script
           type="module"
-          src="/_astro/ChaptersNavigation.astro_astro_type_script_index_0_lang.DYrj7sV6.js"
+          src={P("/_astro/ChaptersNavigation.astro_astro_type_script_index_0_lang.DYrj7sV6.js")}
           async
         />
         <script
           type="module"
-          src="/_astro/Layout.astro_astro_type_script_index_0_lang.DbdhcTQd.js"
+          src={P("/_astro/Layout.astro_astro_type_script_index_0_lang.DbdhcTQd.js")}
           async
         />
       </body>
