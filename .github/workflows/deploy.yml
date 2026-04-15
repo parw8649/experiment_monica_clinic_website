@@ -54,6 +54,17 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.base_path.outputs.base_path }}
 
+      - name: Rewrite absolute asset paths with base path
+        # Next.js rewrites its own chunk URLs when basePath is set, but the
+        # production CSS + JS bundles we ship under public/_astro/ contain
+        # hardcoded absolute paths ("/assets/...", "/libs/...") that pass
+        # through the build untouched. This step walks out/ after the build
+        # and prefixes every such path with the base path so a project-site
+        # deployment resolves them correctly.
+        run: node scripts/rewrite-base-path.mjs
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.base_path.outputs.base_path }}
+
       - name: Add .nojekyll
         # Stops GitHub Pages' Jekyll layer from ignoring files/folders starting
         # with underscores (like `_next` and `_astro`).
