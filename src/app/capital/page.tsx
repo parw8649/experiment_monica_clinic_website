@@ -1,4 +1,5 @@
 import { readSection } from "@/lib/readSection";
+import { RawBody } from "@/components/raw-body";
 
 // /capital/ — Montfort Capital page.
 const BODY_INNER = readSection("page-capital");
@@ -10,5 +11,5 @@ export const metadata = {
 };
 
 export default function CapitalPage() {
-  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER }} />;
+  return <RawBody html={BODY_INNER} />;
 }

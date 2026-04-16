@@ -1,4 +1,5 @@
 import { readSection } from "@/lib/readSection";
+import { RawBody } from "@/components/raw-body";
 
 // /contact/ — Contact page with office locations and form.
 const BODY_INNER = readSection("page-contact");
@@ -9,5 +10,5 @@ export const metadata = {
 };
 
 export default function ContactPage() {
-  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER }} />;
+  return <RawBody html={BODY_INNER} />;
 }

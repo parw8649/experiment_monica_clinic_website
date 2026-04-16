@@ -1,4 +1,5 @@
 import { readSection } from "@/lib/readSection";
+import { RawBody } from "@/components/raw-body";
 
 // /news/ — News index page listing recent Montfort press releases.
 const BODY_INNER = readSection("page-news");
@@ -9,5 +10,5 @@ export const metadata = {
 };
 
 export default function NewsPage() {
-  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER }} />;
+  return <RawBody html={BODY_INNER} />;
 }

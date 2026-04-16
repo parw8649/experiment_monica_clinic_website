@@ -21,6 +21,22 @@
 // so a path that's already been prefixed (by Next.js or by readSection)
 // never gets double-prefixed.
 //
+// Beyond asset-URL prefixing, this script also fixes a second class of
+// breakage in `GlobalApp.vK8XqYB9.js`: its hardcoded pathname→scene map.
+// The compiled bundle has a `getPage(pathname)` helper that does a plain
+// map lookup like `PT["/trading"]` to decide which scene assets to load.
+// When the site is served from `/experiment_monica_clinic_website/...`,
+// `window.location.pathname` is `/experiment_monica_clinic_website/` and
+// the lookup returns `undefined`, so no scene-specific assets are ever
+// loaded and the hero stays blank. Same story for the `themes` map used
+// by the header and sound components. The fix is surgical:
+//   - make `getPage(e)` strip `/<base-path>` from the front of `e` before
+//     the map lookup
+//   - make `updateThemeFromPath()` strip `/<base-path>` from
+//     `window.location.pathname` before the map lookup
+// Both are single-occurrence string substitutions against the minified
+// bundle and are idempotent (we match the unpatched prefix only).
+//
 // Run: BASE_PATH=/experiment_monica_clinic_website node scripts/rewrite-base-path.mjs
 // (or let deploy.yml pass NEXT_PUBLIC_BASE_PATH through automatically).
 import fs from 'node:fs';
@@ -93,3 +109,57 @@ for (const file of files) {
 }
 
 console.log(`\n[rewrite-base-path] Done. Rewrote ${filesRewritten}/${files.length} files, ${totalSubs} total substitutions.`);
+
+// --- Second pass: patch GlobalApp.vK8XqYB9.js's pathname-based lookups ---
+//
+// See the top-of-file comment for why this is necessary.
+const GLOBALAPP = path.join(OUT_DIR, '_astro', 'GlobalApp.vK8XqYB9.js');
+if (fs.existsSync(GLOBALAPP)) {
+  let src = fs.readFileSync(GLOBALAPP, 'utf8');
+  let gaPatches = 0;
+
+  // Build the `^<BASE_PATH>(?=/|$)` prefix we'll splice into the source.
+  // CRITICAL: every `/` inside the base path must be written as `\/` so it
+  // is a literal `/` inside a JS regex literal. `escapeRegex` above escapes
+  // regex metacharacters but not `/` (since `/` is a JS regex-literal
+  // terminator, not a regex metacharacter). We escape it separately here.
+  const basePathForRegex = BASE_PATH.replace(/\//g, '\\/');
+  // Prefix source that strips `/<base-path>` off the front of a path,
+  // leaving `/trading`, `/capital`, ..., or `` for the bare home path.
+  const stripBasePathSource = `/^${basePathForRegex}(?=\\/|$)/`;
+
+  // Patch 1 — getPage(e): strip the base path off the front of `e` before
+  // the PT map lookup so `/experiment_monica_clinic_website/trading/` maps
+  // to `Trading`. The original minified function looks like:
+  //
+  //   getPage(e){let t=e.replace(/\/$/,"");t===""&&(t="/");const n=PT[t];return this.pages[n]}
+  //
+  // We prepend a base-path strip to the t= assignment.
+  const getPageBefore = 'getPage(e){let t=e.replace(/\\/$/,"");';
+  const getPageAfter = `getPage(e){let t=e.replace(${stripBasePathSource},"").replace(/\\/$/,"");`;
+  if (src.includes(getPageBefore)) {
+    src = src.replace(getPageBefore, getPageAfter);
+    gaPatches++;
+  }
+
+  // Patch 2 — updateThemeFromPath(): same base-path strip so the path is
+  // looked up in `this.themes` correctly. The original minified function:
+  //
+  //   updateThemeFromPath(){const e=window.location.pathname.replace(/\/$/,"");this.setTheme(this.themes[e]||"dark",!0)}
+  //
+  // There are TWO copies of this function (Header class and Sound class),
+  // so we replace every occurrence.
+  const updThemeBefore = 'updateThemeFromPath(){const e=window.location.pathname.replace(/\\/$/,"");';
+  const updThemeAfter = `updateThemeFromPath(){const e=window.location.pathname.replace(${stripBasePathSource},"").replace(/\\/$/,"");`;
+  while (src.includes(updThemeBefore)) {
+    src = src.replace(updThemeBefore, updThemeAfter);
+    gaPatches++;
+  }
+
+  if (gaPatches > 0) {
+    fs.writeFileSync(GLOBALAPP, src);
+    console.log(`[rewrite-base-path] Patched ${gaPatches} pathname-lookup call site${gaPatches === 1 ? '' : 's'} in _astro/GlobalApp.vK8XqYB9.js.`);
+  } else {
+    console.log('[rewrite-base-path] _astro/GlobalApp.vK8XqYB9.js pathname patches already applied (or source moved).');
+  }
+}

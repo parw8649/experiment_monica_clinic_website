@@ -1,9 +1,11 @@
 import { readSection } from "@/lib/readSection";
+import { RawBody } from "@/components/raw-body";
 
 // /trading/ — Montfort Trading page.
 // Full body of https://mont-fort.com/trading/ injected verbatim; mont-fort's
 // production CSS + module scripts (loaded in src/app/layout.tsx) wire
 // themselves to the DOM attributes (data-astro-cid-*, data-chapter, etc.).
+// See src/components/raw-body.tsx for why we unwrap the React div.
 const BODY_INNER = readSection("page-trading");
 
 export const metadata = {
@@ -13,5 +15,5 @@ export const metadata = {
 };
 
 export default function TradingPage() {
-  return <div dangerouslySetInnerHTML={{ __html: BODY_INNER }} />;
+  return <RawBody html={BODY_INNER} />;
 }
